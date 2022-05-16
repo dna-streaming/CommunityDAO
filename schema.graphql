@@ -1,6 +1,125 @@
-type ExampleEntity @entity {
-  id: ID!
-  count: BigInt!
-  _oldAdmin: Bytes! # address
-  _newAdmin: Bytes! # address
+##################################################################### //
+############################### Enums ############################### //
+##################################################################### //
+enum TokenType{
+  USDC
+  WETH
+  SLP
+  AXS
+  Axie
+  Land
+  LandItem
+}
+enum TransferType{
+  Batch
+  Mint
+  Purchase
+  Regular
+  Burn
+  Breed
+}
+
+enum AuctionType{
+  listed
+  cancelled
+  purchased
+}
+##################################################################### //
+############################ Entities ############################### //
+##################################################################### //
+type Account @entity{
+  id:ID!
+  currencies:[Currency!]! @derivedfrom(field:"owner")
+  nfts:[NFT!]! @derivedfrom(field:"owner")
+  transfers:[Transfer!]! @derivedfrom(field:"sender")
+  purchases:[Purchase!]! @derivedfrom(field:"buyer")
+  auctions:[Auction!]! @derivedfrom(field:"seller")
+}
+
+type Currency @entity{
+  id:ID!
+  balance:BigDecimal!
+  symbol:TokenType!
+  owner:Account!
+  totalTransactions:BigInt!
+}
+
+type Purchase @entity{
+  id:ID!
+  buyer:Account!
+  auction:Auction!
+  transferPurchase: [TransferPurchase!]! @derivedfrom(field:"purchase")
+  purchaseHistory:PurchaseHistory!
+}
+
+type Auction @entity{
+  id:ID!
+  seller:Account!
+  nft:NFT!
+  listing:Int!
+  state:AuctionType!
+  timeStamp:BigInt!
+  listingPrice:BigDecimal!
+}
+
+type Transfer @entity{
+  id:ID!
+  sender:Account!
+  receiver:Bytes!
+  amount:BigDecimal!
+  tokenType:TokenType!
+  transferType:TransferType!
+  timeStamp:BigInt!
+  transferPurchase:TransferPurchase
+  transferBreed:TransferBreed
+}
+
+type TransferPurchase @entity{
+  id:ID!
+  transfer:Transfer!
+  purchase:Purchase!
+}
+
+type NFT @entity{
+  id:ID!
+  owner:Account!
+  mint:MintHistory!
+  ownerHistory:[OwnerHistory!]! @derivedfrom(field:"nft")
+  purchaseHistory:[PurchaseHistory!]! @derivedfrom(field:"nft")
+  breedHistory:[BreedHistory!]! @derivedfrom(field:"nft")
+}
+
+type TransferBreed @entity{
+  id:ID!
+  transfer:Transfer!
+  breedHistory:BreedHistory!
+}
+
+type BreedHistory @entity{
+  id:ID!
+  matron:BigInt!
+  sire:BigInt!
+  owner:Account!
+  count:Int!
+  transferBreed:[TransferBreed!]! @derivedfrom(field:"breedHistory")
+}
+
+type PurchaseHistory @entity{
+  id:ID!
+  purchase:Purchase!
+  nft:NFT!
+}
+
+type OwnerHistory @entity{
+  id:ID!
+  owner:Bytes!
+  nft:NFT!
+  timeStamp:BigInt!
+}
+
+type MintHistory @entity{
+  id:ID!
+  minter:Bytes!
+  timeStamp:BigInt!
+  nft:NFT!
 }
